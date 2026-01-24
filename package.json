@@ -1,0 +1,12 @@
+{
+  "name": "defun",
+  "module": "index.ts",
+  "type": "module",
+  "sideEffects": false,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
