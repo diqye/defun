@@ -1,9 +1,28 @@
 
 /**
  * HKT模拟
+ * 单个类型参数
  */
-export interface URItoKind<A=any> {}
+export interface URItoKind<A=any> {
+}
+export type URIs = keyof URItoKind
 export type Kind<URI extends keyof URItoKind,A> = URItoKind<A>[URI]
+
+/**
+ * 两个类型参数
+ */
+export interface URItoKind2<A=any,B=any> {
+}
+export type URIs2 = keyof URItoKind2
+export type Kind2<URI extends keyof URItoKind2,A,B> = URItoKind2<A,B>[URI]
+
+/**
+ * 三个类型参数
+ */
+export interface URItoKind3<A=any,B=any,C=any> {
+}
+export type URIs3 = keyof URItoKind3
+export type Kind3<URI extends keyof URItoKind3,A,B,C> = URItoKind3<A,B,C>[URI]
 
 /**
  * 类型展开工具类型，对开发者友好
@@ -51,9 +70,6 @@ export function callF<A>(f:()=>A):A {
  * 注意：`overwrites` 仅覆盖返回对象，不会改变派生函数内部引用的原逻辑。
  */
 export function defun<Minimal,Full,M extends Minimal>(defaults:(mini: Minimal) => Full) {
-    /**
-     * dafd
-     */
     return (minimal: M,overwrites?:Partial<Full>) =>  {
         return {
             ...defaults(minimal),

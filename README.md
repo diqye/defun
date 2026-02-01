@@ -50,7 +50,7 @@ function defun<Minimal, Full>(defaults: (mini: Minimal) => Full)
 
 ```typescript
 // 1. 定义派生规则
-const Ord = defun(<A>(minimal: OrdMinimal<A> & OrdDependencies<A>) => {
+const Ord = defun(<A>(minimal: OrdMinimal<A> & Dependencies<{Eq:typeof Eq<A>}>) => {
     const compare = "compare" in minimal ? ... : ...
     const lte = "lte" in minimal ? ... : ...
     
@@ -85,18 +85,6 @@ NumberOrd.max(1, 8, 4); // 8
 | **Ord** | `lte` 或 `compare` | `gt`, `lt`, `gte`, `max`, `min` |
 | **Monad** | `pure`, `flatMap` | `fmap`, `flatten`, `ap`, `zip`, `replicate` |
 | **Traversable** | `traverse` | `sequence` (容器翻转魔法) |
-
----
-
-## 使用场景：逻辑解耦与自动化
-
-### 异步流控 (Task Monad)
-
-不再手工编排 `Promise`。通过 `Monad` 派生出的 `zip` 和 `flatten`，你可以像搭积木一样组合异步任务，而所有的错误处理和空值检查都已固化在派生逻辑中。
-
-### 跨类型转换 (The Sequence Magic)
-
-利用 `Traversable` 的派生能力，一键将 `Array<Promise<A>>` 转换为 `Promise<Array<A>>`。你不再编写循环，你只定义结构的变换。
 
 ---
 
