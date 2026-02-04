@@ -35,64 +35,125 @@
 
 ---
 
-## 核心原语：`defun`
+## 快速开始：使用 Eq 和 Ord 类型类
 
-`defun` 是所有派生行为的起点。它定义了从“核心集”到“全量集”的映射关系。
+让我们从最简单的类型类开始，学习如何使用 `defun` 函数。
+
+### 1. 从 Eq 开始
+
+Eq（相等性）类型类用于定义类型的相等性比较。你只需要提供 `equal` 方法，`defun` 会自动为你派生 `notEqual` 方法。
 
 ```typescript
-function defun<Minimal, Full>(defaults: (mini: Minimal) => Full)
+import { defun } from "defun"
 
+// 定义 Eq 类型类
+type EqMinimal<A> = {
+    equal: (a: A, b: A) => boolean
+}
+
+const Eq = defun(<A>(minimal: EqMinimal<A>) => ({
+    ...minimal,
+    notEqual: (a: A, b: A) => !minimal.equal(a, b)
+}))
+
+// 创建 Number 类型的 Eq 实例
+const NumberEq = Eq<number>({
+    equal: (a, b) => a === b
+})
+
+// 使用
+NumberEq.equal(1, 1) // true
+NumberEq.notEqual(1, 2) // true
 ```
 
-### 示例：从 `Eq` 到 `Ord` 的进化
+### 2. 进阶到 Ord
 
-你只需要关注如何比较大小（`lte`），`defun` 会为你构建整个几何级数般的工具函数：
+Ord（可比较）类型类扩展了 Eq，用于定义类型的大小比较。它依赖于 Eq 类型类。你只需要提供 `lte`（小于等于）或 `compare`（比较）方法，`defun` 会自动为你派生 `lt`、`gt`、`gte`、`max`、`min` 等方法。
 
 ```typescript
-// 1. 定义派生规则
-const Ord = defun(<A>(minimal: OrdMinimal<A> & Dependencies<{Eq:typeof Eq<A>}>) => {
-    const compare = "compare" in minimal ? ... : ...
-    const lte = "lte" in minimal ? ... : ...
-    
+import { defun, type Dependencies } from "defun"
+
+// 定义 Ord 类型类
+type OrdMinimal<A> = {
+    lte: (a: A, b: A) => boolean
+}
+
+export const Ord = defun(<A>(
+    minimal: OrdMinimal<A> & Dependencies<{
+            Eq: typeof Eq<A>
+        }>
+) => {
+    const compare = "compare" in minimal ? minimal.compare : (a:A,b:A) => {
+        if(lte(a,b)) return -1
+        if(minimal.$deps.Eq.equal(a,b)) return 0
+        return 1
+    }
+    const lte = "lte" in minimal ? minimal.lte : (a:A,b:A):boolean => {
+        return compare(a,b) <= 0
+    }
+    const gt = (a:A,b:A) => {
+        return compare(a,b) > 0
+    }
+    const gte = (a:A,b:A) => {
+        return compare(a,b) >= 0
+    }
+    const lt = (a:A,b:A) => {
+        return compare(a,b) < 0
+    }
+    const max = (x:A,...xs:A[]) => {
+        return xs.reduce((a,b)=>{
+            if(gt(a,b)) return a
+            return b
+        },x)
+    }
+    const min = (x:A,...xs:A[]) => {
+        return xs.reduce((a,b)=>{
+            if(lt(a,b)) return a
+            return b
+        },x)
+    }
     return {
-        compare, lte,
-        gt:  (a: A, b: A) => compare(a, b) > 0,
-        gte: (a: A, b: A) => compare(a, b) >= 0,
-        max: (x: A, ...xs: A[]) => xs.reduce(...),
-        // ... 更多自动派生的函数
+        gt,
+        compare,
+        gte,
+        lte,
+        lt,
+        max,
+        min
     }
 })
 
-// 2. 消费派生实例
+// 创建 Number 类型的 Ord 实例
 const NumberOrd = Ord<number>({
     lte: (a, b) => a <= b,
     $deps: { Eq: NumberEq }
 })
 
-NumberOrd.max(1, 8, 4); // 8
-
+// 使用
+NumberOrd.lte(1, 2) // true
+NumberOrd.gt(3, 2) // true
+NumberOrd.max(1, 8, 4) // 8
+NumberOrd.min(1, 8, 4) // 1
 ```
 
----
+### 3. 函数式编程核心：Functor, Applicative, Monad
 
-## 核心模块架构
+对于更高级的函数式编程概念，如 Functor（函子）、Applicative（应用函子）和 Monad（单子），请参考我们的专门文档：
 
-基于 `defun` 引擎，本库输出以下高度抽象的逻辑模板：
-
-| 模板 (Template) | 最小实现 (Minimal) | 派生获得 (Derived) |
-| --- | --- | --- |
-| **Eq** | `equal` | `notEqual` |
-| **Ord** | `lte` 或 `compare` | `gt`, `lt`, `gte`, `max`, `min` |
-| **Monad** | `pure`, `flatMap` | `fmap`, `flatten`, `ap`, `zip`, `replicate` |
-| **Traversable** | `traverse` | `sequence` (容器翻转魔法) |
+- [Functor, Applicative, Monad 详解](./docs/Monad.md) - 从简单到复杂的完整指南
+- [Binary 类型类](./docs/Binary.md) - 处理二进制序列化的类型类
 
 ---
 
-## 安装 (还未发包)
+
+## 安装
+
+**注意：** 这是一个 TypeScript 专用包。使用前需要确保你的项目已经配置了 TypeScript 支持（TypeScript 5+ 版本）。
+
 ```bash
 bun add defun
 ```
-or 
+or
 ```bash
 npm install defun
 

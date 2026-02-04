@@ -46,6 +46,14 @@ import { NumberBinary } from "defun"
 const value = 42.42
 const encoded = NumberBinary.encode(value)
 const decoded = NumberBinary.decode(encoded) // 42.42
+
+// 具体类型的 NumberBinary
+Int8Binary
+Uint16Binary
+Int16Binary
+Uint32Binary
+Int32Binary
+Float64Binary=NumberBinary
 ```
 
 ### 字符串 (StringBinary)
@@ -99,12 +107,12 @@ const encoded = Tuple8BooleanBinary.encode(value) // Uint8Array(1) [0b11001001]
 const decoded = Tuple8BooleanBinary.decode(encoded) // [true, true, false, false, true, false, false, true]
 ```
 
-## 复杂对象类型 (ObjectBinary)
+## 复杂对象类型 (JSONBBinary)
 
-ObjectBinary 支持 JSON 类型外加 Uint8Array 类型，允许嵌套结构。
+JSONBBinary 支持 JSON 类型外加 Uint8Array 类型，允许嵌套结构。
 
 ```typescript
-import { ObjectBinary, type JSONValue } from "defun"
+import { JSONBBinary, type JSONValue } from "defun"
 
 const value: JSONValue = {
     name: "测试对象",
@@ -120,8 +128,43 @@ const value: JSONValue = {
     nullValue: null
 }
 
-const encoded = ObjectBinary.encode(value)
-const decoded = ObjectBinary.decode(encoded)
+const encoded = JSONBBinary.encode(value)
+const decoded = JSONBBinary.decode(encoded)
+```
+
+## 对象类型 (ObjectBinary)
+
+ObjectBinary 是一个工厂函数，接受键值对对象，用于创建自定义类型的 Binary 实例。在 JavaScript 中，对象的遍历顺序是确定的，我们只接受字符串键，所以遍历顺序是按照插入顺序排列的。
+
+```typescript
+import { ObjectBinary, StringBinary, NumberBinary, BooleanBinary, ListBinary } from "defun"
+
+type User = {
+    name: string
+    age: number
+    isActive: boolean
+    score: number
+    tags: string[]
+}
+
+const userBinary = ObjectBinary<User>({
+    name: StringBinary,
+    age: NumberBinary,
+    isActive: BooleanBinary,
+    score: NumberBinary,
+    tags: ListBinary(StringBinary)
+})
+
+const value: User = {
+    name: "张三",
+    age: 25,
+    isActive: true,
+    score: 98.5,
+    tags: ["typescript", "binary", "serialization"]
+}
+
+const encoded = userBinary.encode(value)
+const decoded = userBinary.decode(encoded)
 ```
 
 ## 自定义类型
@@ -228,12 +271,12 @@ console.log(decodedBin.ctx) // "Hello, World!"
 二进制格式比 JSON 更紧凑，可以减少网络传输大小。
 
 ```typescript
-import { ObjectBinary } from "defun"
+import { JSONBBinary } from "defun"
 import type { JSONValue } from "defun"
 
 // 发送数据
 const data: JSONValue = { message: "Hello", count: 5 }
-const bytes = ObjectBinary.encode(data)
+const bytes = JSONBBinary.encode(data)
 await fetch("/api/endpoint", {
     method: "POST",
     body: bytes,
@@ -243,7 +286,7 @@ await fetch("/api/endpoint", {
 // 接收数据
 const response = await fetch("/api/endpoint")
 const responseBytes = new Uint8Array(await response.arrayBuffer())
-const receivedData = ObjectBinary.decode(responseBytes)
+const receivedData = JSONBBinary.decode(responseBytes)
 ```
 
 ### 数据存储
@@ -251,7 +294,7 @@ const receivedData = ObjectBinary.decode(responseBytes)
 二进制格式适合存储在文件或数据库中，可以提高存储效率。
 
 ```typescript
-import { ObjectBinary } from "defun"
+import { JSONBBinary } from "defun"
 import type { JSONValue } from "defun"
 
 const fs = require("fs")
@@ -264,12 +307,12 @@ const data: JSONValue = {
 }
 
 // 写入文件
-const bytes = ObjectBinary.encode(data)
+const bytes = JSONBBinary.encode(data)
 fs.writeFileSync("data.bin", bytes)
 
 // 读取文件
 const readBytes = fs.readFileSync("data.bin")
-const readData = ObjectBinary.decode(readBytes)
+const readData = JSONBBinary.decode(readBytes)
 ```
 
 ### 游戏开发

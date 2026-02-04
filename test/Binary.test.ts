@@ -1,5 +1,5 @@
 import { test, expect } from "bun:test"
-import { BooleanBinary, StringBinary, NumberBinary, Uint8Binary, ListBinary, Binary, BinaryBuilder, BinaryReader, Tuple8BooleanBinary, Uint8ArrayBinary, Bin, ObjectBinary, type JSONValue } from "../index"
+import { BooleanBinary, StringBinary, NumberBinary, Uint8Binary, ListBinary, Binary, BinaryBuilder, BinaryReader, Tuple8BooleanBinary, Uint8ArrayBinary, Bin, JSONBBinary, ObjectBinary, type JSONValue } from "../index"
 
 test("BooleanBinary 序列化和反序列化", () => {
     const value = true
@@ -143,6 +143,69 @@ test("Uint8Array",()=>{
 })
 
 test("ObjectBinary 序列化和反序列化", () => {
+    type User = {
+        name: string
+        age: number
+        isActive: boolean
+        score: number
+        tags: string[]
+    }
+
+    const userBinary = ObjectBinary<User>({
+        name: StringBinary,
+        age: NumberBinary,
+        isActive: BooleanBinary,
+        score: NumberBinary,
+        tags: ListBinary(StringBinary)
+    })
+
+    const value: User = {
+        name: "张三",
+        age: 25,
+        isActive: true,
+        score: 98.5,
+        tags: ["typescript", "binary", "serialization"]
+    }
+
+    const encoded = userBinary.encode(value)
+    const decoded = userBinary.decode(encoded)
+
+    expect(decoded.name).toBe(value.name)
+    expect(decoded.age).toBe(value.age)
+    expect(decoded.isActive).toBe(value.isActive)
+    expect(decoded.score).toBeCloseTo(value.score, 5)
+    expect(decoded.tags).toEqual(value.tags)
+})
+
+test("ObjectBinary 包含 Uint8Array 的对象", () => {
+    type DataItem = {
+        id: number
+        name: string
+        data: Uint8Array
+    }
+
+    const dataItemBinary = ObjectBinary({
+        id: NumberBinary,
+        name: StringBinary,
+        data: Uint8ArrayBinary
+    })
+
+    const value: DataItem = {
+        id: 1,
+        name: "测试数据",
+        data: new Uint8Array([0x10, 0x20, 0x30, 0x40])
+    }
+
+    const encoded = dataItemBinary.encode(value)
+    const decoded = dataItemBinary.decode(encoded)
+
+    expect(decoded.id).toBe(value.id)
+    expect(decoded.name).toBe(value.name)
+    expect(decoded.data).toBeInstanceOf(Uint8Array)
+    expect(Array.from(decoded.data as Uint8Array)).toEqual(Array.from(value.data as Uint8Array))
+})
+
+test("JSONBBinary 序列化和反序列化", () => {
     const value = {
         name: "测试对象",
         age: 30,
@@ -157,8 +220,8 @@ test("ObjectBinary 序列化和反序列化", () => {
         nullValue: null
     }
 
-    const encoded = ObjectBinary.encode(value)
-    const decoded = ObjectBinary.decode(encoded)  as any
+    const encoded = JSONBBinary.encode(value)
+    const decoded = JSONBBinary.decode(encoded)  as any
 
     // 比较基本属性
     expect(decoded.name).toBe(value.name)
@@ -178,15 +241,15 @@ test("ObjectBinary 序列化和反序列化", () => {
     expect(Array.from(decoded.data as Uint8Array)).toEqual(Array.from(value.data as Uint8Array))
 })
 
-test("ObjectBinary base64 编码和解码", () => {
+test("JSONBBinary base64 编码和解码", () => {
     const value: JSONValue = {
         message: "Hello, ObjectBinary!",
         numbers: [1, 2, 3, 4, 5],
         image: new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0])
     }
 
-    const encoded = ObjectBinary.encodeBase64(value)
-    const decoded = ObjectBinary.decodeBase64(encoded) as any
+    const encoded = JSONBBinary.encodeBase64(value)
+    const decoded = JSONBBinary.decodeBase64(encoded) as any
 
     expect(decoded.message).toBe(value.message)
     expect(decoded.numbers).toEqual(value.numbers)

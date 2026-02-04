@@ -31,17 +31,18 @@ export const Applicative = defun(<A extends URIs>(minimal:ApplicativeMinimal<A> 
         app,
         liftA2,
         leftArrow,
-        rightArrow
+        rightArrow,
+        $deps: minimal.$deps
     }
 })
 
 export type Applicative2Minimal<URI extends URIs2> = {
-    pure: <A,a>(a:A) => Kind2<URI,a,A>,
+    pure: <a,A>(a:A,atype?:a) => Kind2<URI,a,A>,
+} & ({
     liftA2:<A,B,C,a>(f:(a:A,b:B)=>C,fa:Kind2<URI,a,A>,fb:Kind2<URI,a,B>) => Kind2<URI,a,C>
 } | {
-    pure: <A,a>(a:A) => Kind2<URI,a,A>,
     app:<A,B,a>(ff:Kind2<URI,a,(a:A)=>B>,fa:Kind2<URI,a,A>) => Kind2<URI,a,B>
-}
+})
 export const Applicative2 = defun(<A extends URIs2>(minimal:Applicative2Minimal<A> & Dependencies<{Functor:typeof Functor2<A>}>) => {
     const pure = minimal.pure
     const liftA2 = "liftA2" in minimal ? minimal.liftA2 : <a,b,c,$a>(f:(a:a,b:b)=>c,fa:Kind2<A,$a,a>,fb:Kind2<A,$a,b>): Kind2<A,$a,c> => {
@@ -64,17 +65,19 @@ export const Applicative2 = defun(<A extends URIs2>(minimal:Applicative2Minimal<
         app,
         liftA2,
         leftArrow,
-        rightArrow
+        rightArrow,
+        $deps: minimal.$deps
     }
 })
 
 export type Applicative3Minimal<URI extends URIs3> = {
-    pure: <A,a,b>(a:A) => Kind3<URI,a,b,A>,
+    pure: <a,b,A>(a:A) => Kind3<URI,a,b,A>,
+} & ({
     liftA2:<A,B,C,a,b>(f:(a:A,b:B)=>C,fa:Kind3<URI,a,b,A>,fb:Kind3<URI,a,b,B>) => Kind3<URI,a,b,C>
 } | {
-    pure: <A,a,b>(a:A) => Kind3<URI,a,b,A>,
     app:<A,B,a,b>(ff:Kind3<URI,a,b,(a:A)=>B>,fa:Kind3<URI,a,b,A>) => Kind3<URI,a,b,B>
-}
+})
+
 export const Applicative3 = defun(<A extends URIs3>(minimal:Applicative3Minimal<A> & Dependencies<{Functor:typeof Functor3<A>}>) => {
     const pure = minimal.pure
     const liftA2 = "liftA2" in minimal ? minimal.liftA2 : <a,b,c,$a,$b>(f:(a:a,b:b)=>c,fa:Kind3<A,$a,$b,a>,fb:Kind3<A,$a,$b,b>): Kind3<A,$a,$b,c> => {
@@ -97,6 +100,7 @@ export const Applicative3 = defun(<A extends URIs3>(minimal:Applicative3Minimal<
         app,
         liftA2,
         leftArrow,
-        rightArrow
+        rightArrow,
+        $deps: minimal.$deps
     }
 })

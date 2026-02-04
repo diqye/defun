@@ -1,8 +1,33 @@
 {
   "name": "defun",
   "module": "index.ts",
+  "version": "2.0.0",
+  "main": "index.ts",
+  "homepage": "https://github.com/diqye/defun",
+  "description": "A minimalistic yet powerful logic derivation engine for TypeScript, enabling automatic generation of comprehensive APIs from minimal core implementations.",
+  "repository": {
+    "type": "git",
+    "url": "git+git@github.com:diqye/defun.git"
+  },
+  "bugs": {
+    "url": "https://github.com/diqye/defun/issues"
+  },
   "type": "module",
   "sideEffects": false,
+  "keywords": [
+    "typescript",
+    "functional-programming",
+    "type-classes",
+    "monads",
+    "functors",
+    "applicatives",
+    "logic-derivation",
+    "code-generation",
+    "type-level",
+    "hkt",
+    "higher-kinded-types"
+  ],
+  "author": "vallino",
   "devDependencies": {
     "@types/bun": "latest"
   },
@@ -10,6 +35,11 @@
     "typescript": "^5"
   },
   "package": [
-    "."
+    "package.json",
+    "README.md",
+    "LICENSE",
+    "src",
+    "index.ts",
+    "docs"
   ]
 }
